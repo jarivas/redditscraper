@@ -1,0 +1,6 @@
+services:
+    dev:
+        image: golang:1.23
+        env_file:
+            - .env
+    

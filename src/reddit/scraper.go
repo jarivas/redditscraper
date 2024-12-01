@@ -6,9 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jarivas/redditreader"
 	"github.com/joho/godotenv"
-	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
 
 const MAX_MILLISECONDS = 999
@@ -28,7 +26,7 @@ func Scrape(c chan<- Post) error {
 	}
 
 	for {
-		posts, err := redditreader.GetNext(redditreader.MAX_POSTS, nextFullID)
+		posts, err := GetNext(MAX_POSTS, nextFullID)
 
 		if err != nil {
 			err = logError(err)
@@ -40,7 +38,7 @@ func Scrape(c chan<- Post) error {
 			nextFullID = posts[len(posts)-1].FullID
 
 			for _, post := range posts {
-				c <- convertToPost(post)
+				c <- convertRedditPost(post)
 			}
 		}
 
@@ -72,12 +70,4 @@ func getWaitTime() (time.Duration, error) {
 	}
 
 	return time.Duration(waitTime) * time.Microsecond, nil
-}
-
-func convertToPost(post *reddit.Post) Post {
-	return Post{
-		FullID: post.FullID,
-		Title:  post.Title,
-		Body:   post.Body,
-	}
 }

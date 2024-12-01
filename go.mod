@@ -3,7 +3,6 @@ module github.com/jarivas/redditscraper
 go 1.23.3
 
 require (
-	github.com/jarivas/redditreader v0.1.0
 	github.com/joho/godotenv v1.5.1
 	github.com/vartanbeno/go-reddit/v2 v2.0.1
 )

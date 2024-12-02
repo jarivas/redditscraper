@@ -7,8 +7,6 @@ import (
 	"strconv"
 )
 
-const MAX_POSTS = 25
-
 func getPosts(subreddit string, listOptions reddit.ListOptions) ([]Post, error) {
 	options := getListPostOptions(listOptions)
 

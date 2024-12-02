@@ -7,7 +7,6 @@ import (
 	"errors"
 )
 
-const MAX_ERRORS = 10
 
 type ErrorInfo struct {
 	Timestamp time.Time
@@ -16,19 +15,7 @@ type ErrorInfo struct {
 
 var errorList = []ErrorInfo{}
 
-func logError(err error) error {
-	now := time.Now()
-
-	errorLogger(err)
-	
-	if checkErrorFrequency(now) {
-		return nil
-	}
-
-	return getCompiledError()
-}
-
-func errorLogger(err error) {
+func writeError(err error) {
 	file, err2 := os.OpenFile("./logs/error.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
 	if err2 != nil {
@@ -43,14 +30,26 @@ func errorLogger(err error) {
 	log.Fatal(err)
 }
 
+func logError(err error) error {
+	now := time.Now()
+
+	writeError(err)
+	
+	if checkErrorFrequency(now) {
+		return nil
+	}
+
+	return getCompiledError()
+}
+
 func checkErrorFrequency(now time.Time) bool {
-	if len(errorList) < MAX_ERRORS {
+	if len(errorList) < maxErrors {
 		return true
 	}
 
 	clearErrorList(now)
 
-	return len(errorList) < MAX_ERRORS	
+	return len(errorList) < maxErrors	
 }
 
 func clearErrorList(now time.Time) {
@@ -59,7 +58,7 @@ func clearErrorList(now time.Time) {
 	for _, item := range(errorList) {
 		d := item.Timestamp.Sub(now).Milliseconds()
 
-		if (d < MAX_MILLISECONDS) {
+		if (d < maxMilliseconds) {
 			l := len(newList)
 
 			if l > 0 {

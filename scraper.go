@@ -9,13 +9,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const MAX_MILLISECONDS = 999
 
-type Post struct {
-	FullID string
-	Title  string
-	Body   string
-}
 
 func Scrape(c chan<- Post) error {
 	waitTime, err := getWaitTime()

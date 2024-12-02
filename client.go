@@ -2,6 +2,9 @@ package redditscraper
 
 import (
 	"time"
+	"fmt"
+	"encoding/json"
+	"net/http"
 )
 
 type Client struct {
@@ -48,9 +51,23 @@ func (c Client) getPosts(listing PostListing, subreddit, sort, duration string) 
 	if err != nil {
 		writeError(err)
 	}
+
+	if posts != nil {
+		return posts, nil
+	}
+
+	posts, err = c.getPostsHelper(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	c.cachePosts(url, duration, posts)
+
+	return posts, nil
 }
 
-func (c Client) getCachedPosts(url string, subreddit, sort string) ([]*Post, error) {
+func (c Client) getCachedPosts(url, subreddit, sort string) ([]*Post, error) {
 	cachedPost := cache[url]
 
 	if cachedPost == nil {
@@ -68,6 +85,47 @@ func (c Client) getCachedPosts(url string, subreddit, sort string) ([]*Post, err
 	return cachedPost.posts, nil
 }
 
+func (c Client) getPostsHelper(url string) ([]*Post, error) {
+	request, err := http.NewRequest(
+		"GET",
+		apiBaseUrl + url + ".json",
+		nil,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Authentication", "Bearer " + c.token.accessToken)
+
+	response, err := http.DefaultClient.Do(request)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return c.convertResponseToPosts(response)
+}
+
+func (c Client) convertResponseToPosts(response *http.Response) ([]*Post, error) {
+	var body PostListingResponse
+	posts := []*Post{}
+
+	defer response.Body.Close()
+
+	err := json.NewDecoder(response.Body).Decode(body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for index, item := range(body.Data.Children) {
+		posts[index] = item.Data
+	}
+
+	return posts, nil
+}
+
 func (c Client) cachePosts(url, duration string, posts []*Post) {
 	d, err := time.ParseDuration(duration)
 
@@ -76,6 +134,10 @@ func (c Client) cachePosts(url, duration string, posts []*Post) {
 		return
 	}
 
-	expiresIn := time.Now().Add(d)
+	expiresAt := time.Now().Add(d)
 
+	cache[url] = &cachedPosts{
+		posts: posts,
+		expiresAt: expiresAt,
+	}
 }

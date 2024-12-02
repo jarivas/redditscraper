@@ -1,7 +1,7 @@
 package redditscraper
 
 type Post struct {
-	FullID string
-	Title  string
-	Body   string
+	Name  string `json:"name"`
+	Title string `json:"title"`
+	Body  string `json:"selftext"`
 }

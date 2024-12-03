@@ -2,7 +2,6 @@ package redditscraper
 
 import (
 	"time"
-	"fmt"
 	"encoding/json"
 	"net/http"
 )

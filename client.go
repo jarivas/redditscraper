@@ -45,7 +45,7 @@ func (c Client) GetControversialPosts(subreddit string, listing PostListing) ([]
 func (c Client) getPosts(listing PostListing, subreddit, sort, duration string) ([]*Post, error) {
 	url := listing.getUrl(subreddit, sort)
 
-	posts, err := c.getCachedPosts(url, sort, duration)
+	posts, err := c.getCachedPosts(url)
 
 	if err != nil {
 		writeError(err)
@@ -66,7 +66,7 @@ func (c Client) getPosts(listing PostListing, subreddit, sort, duration string) 
 	return posts, nil
 }
 
-func (c Client) getCachedPosts(url, subreddit, sort string) ([]*Post, error) {
+func (c Client) getCachedPosts(url string) ([]*Post, error) {
 	cachedPost := cache[url]
 
 	if cachedPost == nil {

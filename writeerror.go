@@ -6,7 +6,7 @@ import (
 )
 
 func writeError(err error) {
-	file, err2 := os.OpenFile("./logs/error.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	file, err2 := os.OpenFile(writeErrorPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
 	if err2 != nil {
 		log.Println(err)

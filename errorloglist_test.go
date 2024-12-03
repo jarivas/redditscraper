@@ -1,24 +1,25 @@
 package redditscraper
 
 import (
+	"errors"
 	"testing"
 	"time"
 )
 
 func TestCheckCapacity(t *testing.T) {
 	e := ErrorLogList{
-		MaxEntries:      10,
-		MaxMilliseconds: 999,
+		maxEntries:      10,
+		maxMilliseconds: 999,
 	}
 
 	if !e.hasCapacity() {
-		t.Errorf("The count is greater than MaxEntries %v", e.Count)
+		t.Errorf("The count is greater than MaxEntries %v", e.count)
 	}
 
-	e.Count = 10
+	e.count = 10
 
 	if e.hasCapacity() {
-		t.Errorf("The count is less than MaxEntries %v", e.Count)
+		t.Errorf("The count is less than MaxEntries %v", e.count)
 	}
 }
 
@@ -29,20 +30,20 @@ func TestRemoveOlderErrors(t *testing.T) {
 
 	errorList := []ErrorEntry{
 		{
-			Timestamp: past,
+			timestamp: past,
 		},
 	}
 
 	e := ErrorLogList{
-		ErrorList:       errorList,
-		MaxEntries:      10,
-		MaxMilliseconds: 999,
+		errorList:       errorList,
+		maxEntries:      10,
+		maxMilliseconds: 999,
 	}
 
 	e.removeOlderErrors(now)
 
-	if e.Count > 0 {
-		t.Errorf("Older Entries where not removed %v", e.Count)
+	if e.count > 0 {
+		t.Errorf("Older Entries where not removed %v", e.count)
 	}
 }
 
@@ -52,21 +53,53 @@ func TestGetCompiledError(t *testing.T) {
 
 	errorList := []ErrorEntry{
 		{
-			Message: errMsg,
+			err: errors.New(errMsg),
 		},
 		{
-			Message: errMsg2,
+			err: errors.New(errMsg2),
 		},
 	}
 
 	errorLogList := ErrorLogList{
-		ErrorList: errorList,
+		errorList:  errorList,
+		maxEntries: 1,
 	}
 
 	msg := errorLogList.getCompiledError().Error()
 
-	if msg != "Error Messages, Hello, Bye"{
+	if msg != "more than 1 (Max Entries) errors occurred\nHello\nBye" {
 		t.Errorf("There is a problem with the message | %v", msg)
 	}
+}
 
+func TestNew(t *testing.T) {
+	errorLogList := ErrorLogList{}.New(1, 999)
+
+	if len(errorLogList.errorList) != 0 {
+		t.Errorf("errorList length is invalid")
+	}
+
+	if cap(errorLogList.errorList) != 1 {
+		t.Errorf("errorList capacity is invalid")
+	}
+
+	if errorLogList.maxMilliseconds != 999 {
+		t.Errorf("errorList max milliseconds is invalid")
+	}
+}
+
+func TestLogError(t *testing.T) {
+	errorLogList := ErrorLogList{}.New(1, 999)
+
+	err := errorLogList.LogError(errors.New("Test"))
+
+	if err != nil {
+		t.Errorf("problem with errorlist capacity: %v", err.Error())
+	}
+
+	err = errorLogList.LogError(errors.New("Test2"))
+
+	if err == nil {
+		t.Errorf("problem with errorlist capacity: %v", err.Error())
+	}
 }

@@ -2,26 +2,37 @@ package redditscraper
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
 type ErrorEntry struct {
-	Timestamp time.Time
-	Message   string
+	timestamp time.Time
+	err   error
 }
 
 type ErrorLogList struct {
-	ErrorList       []ErrorEntry
-	Count           int
-	MaxEntries      int
-	MaxMilliseconds int64
+	errorList       []ErrorEntry
+	count           int
+	maxEntries      int
+	maxMilliseconds int64
 }
 
-func (e ErrorLogList) hasCapacity() bool {
-	return e.Count < e.MaxEntries
+func (e ErrorLogList) New(maxEntries,  maxMilliseconds int) ErrorLogList {
+	list := make([]ErrorEntry, 0, maxEntries)
+
+	return ErrorLogList{
+		errorList: list,
+		maxEntries: maxEntries,
+		maxMilliseconds: int64(maxMilliseconds),
+	}
 }
 
 func (e *ErrorLogList) LogError(err error) error {
+	if e.maxEntries == 0 {
+		return errors.New("please use newErrorLogList before call LogError")
+	}
+
 	now := time.Now()
 
 	writeError(err)
@@ -29,9 +40,9 @@ func (e *ErrorLogList) LogError(err error) error {
 	e.removeOlderErrors(now)
 
 	if e.hasCapacity() {
-		e.ErrorList = append(e.ErrorList, ErrorEntry{
-			Timestamp: now,
-			Message: err.Error(),
+		e.errorList = append(e.errorList, ErrorEntry{
+			timestamp: now,
+			err:   err,
 		})
 
 		return nil
@@ -40,33 +51,32 @@ func (e *ErrorLogList) LogError(err error) error {
 	return e.getCompiledError()
 }
 
+func (e ErrorLogList) hasCapacity() bool {
+	return e.count < e.maxEntries
+}
+
 func (e *ErrorLogList) removeOlderErrors(now time.Time) {
-	newList := make([]ErrorEntry, 0, e.MaxEntries)
+	newList := make([]ErrorEntry, 0, e.maxEntries)
 
-	if len(e.ErrorList) == 0 {
-		if cap(e.ErrorList) == 0 {
-			e.ErrorList = newList
-		}
-	}
+	for _, item := range e.errorList {
+		d := -1 * item.timestamp.Sub(now).Milliseconds()
 
-	for _, item := range e.ErrorList {
-		d := -1 * item.Timestamp.Sub(now).Milliseconds()
-
-		if d < e.MaxMilliseconds {
+		if d < e.maxMilliseconds {
 			newList = append(newList, item)
 		}
 	}
 
-	e.ErrorList = newList
-	e.Count = len(newList)
+	e.errorList = newList
+	e.count = len(newList)
 }
 
 func (e ErrorLogList) getCompiledError() error {
-	msg := "Error Messages"
+	msg := fmt.Sprintf("more than %v (Max Entries) errors occurred", e.maxEntries)
+	err := errors.New(msg)
 
-	for _, item := range e.ErrorList {
-		msg += ", " + item.Message
+	for _, item := range e.errorList {
+		err = errors.Join(err, item.err)
 	}
 
-	return errors.New(msg)
+	return err
 }

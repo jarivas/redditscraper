@@ -23,7 +23,7 @@ import (
 )
 
 func main() {
-    scraper, err := RedditScraper{}.New("AmItheAsshole", 10, 999)
+    scraper, err := RedditScraper{}.FromEnv("AmItheAsshole", 10, 999)
 
     if err != nil {
         fmt.Errorf("There was an error: %v", err)

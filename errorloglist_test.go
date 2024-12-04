@@ -100,6 +100,6 @@ func TestLogError(t *testing.T) {
 	err = errorLogList.LogError(errors.New("Test2"))
 
 	if err == nil {
-		t.Errorf("problem with errorlist capacity: %v", err.Error())
+		t.Error("problem with errorlist capacity")
 	}
 }

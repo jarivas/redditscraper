@@ -87,7 +87,7 @@ func (c Client) getCachedPosts(url string) ([]*Post, error) {
 func (c Client) getPostsHelper(url string) ([]*Post, error) {
 	request, err := http.NewRequest(
 		"GET",
-		apiBaseUrl + url + ".json",
+		apiBaseUrl + url + "&raw_json=1.json",
 		nil,
 	)
 

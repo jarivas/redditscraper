@@ -21,14 +21,10 @@ type PostListing struct {
 func (l PostListing) String() string {
 	result := l.limitParam()
 
-	result += "&" + l.countParam()
-
 	result += "&" + l.periodParam()
 
-	dummy := l.idParam()
-
-	if dummy != "" {
-		result += "&" + dummy
+	if l.Count > 0 {
+		result += "&" + l.countParam()
 	}
 
 	if l.Show {
@@ -37,6 +33,12 @@ func (l PostListing) String() string {
 
 	if l.SubredditDetail {
 		result += "&" + l.subredditDetailsParam()
+	}
+
+	dummy := l.idParam()
+
+	if dummy != "" {
+		result += "&" + dummy
 	}
 
 	return result
@@ -59,20 +61,23 @@ func (l PostListing) periodParam() string {
 		l.Period = "all"
 	}
 
-	return "t"+l.Period
+	return "t="+l.Period
 }
 
 func (l PostListing) idParam() string {
 	result := ""
 
-	if l.Id != "" {
-		if l.Latest {
-			result += "before="
-		} else {
-			result += "after="
-		}
-		result += l.Id
+	if l.Id == "" {
+		return result
 	}
+
+	if l.Latest {
+		result += "before="
+	} else {
+		result += "after="
+	}
+
+	result += l.Id
 
 	return result
 }

@@ -44,7 +44,7 @@ func TestPeriod(t *testing.T) {
 		t.Errorf("Invalid period: %v", l.Period)
 	}
 
-	for _, item := range(validPeriods) {
+	for _, item := range validPeriods {
 		l.Period = item
 
 		param = l.periodParam()
@@ -82,7 +82,7 @@ func TestId(t *testing.T) {
 
 func TestGetUrl(t *testing.T) {
 	l := PostListing{
-		Show: true,
+		Show:            true,
 		SubredditDetail: true,
 	}
 

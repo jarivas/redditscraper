@@ -25,7 +25,7 @@ func TestCachePosts(t *testing.T) {
 func TestGetCachedPosts(t *testing.T) {
 	client := Client{}
 
-	postsCache = map[string]*cachedPosts{}
+	postsCache = map[string]*CachedPosts{}
 
 	cachedPosts, err := client.getCachedPosts("asd")
 
@@ -47,23 +47,9 @@ func TestGetCachedPosts(t *testing.T) {
 		t.Errorf("error caching post %v", err)
 	}
 
-	if posts[0].Name != cachedPosts[0].Name {
+	if posts[0].Name != cachedPosts.posts[0].Name {
 		t.Error("the cache was not empty")
 	}
-}
-
-func cachePosts(c Client) []*Post {
-	posts := []*Post {
-		{
-			Name: "asd",
-			Title: "asd",
-			Body: "asd",	
-		},
-	}
-
-	c.cachePosts("asd", subredditCacheLong, posts)
-
-	return posts
 }
 
 func TestGetNew(t *testing.T) {
@@ -73,13 +59,12 @@ func TestGetNew(t *testing.T) {
 		t.Errorf("error happened, %v", err.Error())
 	}
 
-
 	if client.token.accessToken == "" {
 		t.Error("no access token")
 	}
 }
 
-func TestGetPosts(t *testing.T) {
+func TestGetPostsClient(t *testing.T) {
 	client, err := Client{}.FromEnv()
 
 	if err != nil {
@@ -91,13 +76,26 @@ func TestGetPosts(t *testing.T) {
 	}
 
 	posts, err := client.GetTopPosts("AmItheAsshole", listing)
-	
+
 	if err != nil {
 		t.Errorf("error happened, %v", err.Error())
 	}
 
-	if len(posts) == 0 {
+	if len(posts.posts) == 0 {
 		t.Error("no posts token")
 	}
-	
+}
+
+func cachePosts(c Client) []*Post {
+	posts := []*Post{
+		{
+			Name:  "asd",
+			Title: "asd",
+			Body:  "asd",
+		},
+	}
+
+	c.cachePosts("asd", subredditCacheLong, posts)
+
+	return posts
 }

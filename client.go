@@ -2,9 +2,9 @@ package redditscraper
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
-	"errors"
 )
 
 type Client struct {
@@ -12,12 +12,7 @@ type Client struct {
 	token *oauthToken
 }
 
-type cachedPosts struct {
-	posts     []*Post
-	expiresAt time.Time
-}
-
-var postsCache = map[string]*cachedPosts{}
+var postsCache = map[string]*CachedPosts{}
 
 func (c Client) New(info ClientInfo) (*Client, error) {
 	token, err := info.getToken()
@@ -40,55 +35,55 @@ func (c Client) FromEnv() (*Client, error) {
 	return c.New(info)
 }
 
-func (c Client) GetBestPosts(subreddit string, listing PostListing) ([]*Post, error) {
+func (c Client) GetBestPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
 	return c.getPosts(listing, subreddit, subredditBest, subredditCacheLong)
 }
 
-func (c Client) GetNewPosts(subreddit string, listing PostListing) ([]*Post, error) {
+func (c Client) GetNewPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
 	return c.getPosts(listing, subreddit, subredditNew, subredditCache1Short)
 }
 
-func (c Client) GetRandomPosts(subreddit string, listing PostListing) ([]*Post, error) {
+func (c Client) GetRandomPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
 	return c.getPosts(listing, subreddit, subredditRandom, subredditCache1Short)
 }
 
-func (c Client) GetRisingPosts(subreddit string, listing PostListing) ([]*Post, error) {
+func (c Client) GetRisingPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
 	return c.getPosts(listing, subreddit, subredditRising, subredditCacheLong)
 }
 
-func (c Client) GetTopPosts(subreddit string, listing PostListing) ([]*Post, error) {
+func (c Client) GetTopPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
 	return c.getPosts(listing, subreddit, subredditTop, subredditCacheLong)
 }
 
-func (c Client) GetControversialPosts(subreddit string, listing PostListing) ([]*Post, error) {
+func (c Client) GetControversialPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
 	return c.getPosts(listing, subreddit, subredditControversial, subredditCacheLong)
 }
 
-func (c Client) getPosts(listing PostListing, subreddit, sort, duration string) ([]*Post, error) {
+func (c Client) getPosts(listing PostListing, subreddit, sort, duration string) (*CachedPosts, error) {
 	url := listing.getUrl(subreddit, sort)
 
-	posts, err := c.getCachedPosts(url)
+	cachedPosts, err := c.getCachedPosts(url)
 
 	if err != nil {
 		writeError(err)
+
+		return nil, err
 	}
 
-	if posts != nil {
-		return posts, nil
+	if cachedPosts != nil {
+		return cachedPosts, nil
 	}
 
-	posts, err = c.getPostsHelper(url)
+	posts, err := c.getPostsHelper(url)
 
 	if err != nil {
 		return nil, err
 	}
 
-	c.cachePosts(url, duration, posts)
-
-	return posts, nil
+	return c.cachePosts(url, duration, posts)
 }
 
-func (c Client) getCachedPosts(url string) ([]*Post, error) {
+func (c Client) getCachedPosts(url string) (*CachedPosts, error) {
 	cachedPosts := postsCache[url]
 
 	if cachedPosts == nil {
@@ -103,7 +98,7 @@ func (c Client) getCachedPosts(url string) ([]*Post, error) {
 		return nil, nil
 	}
 
-	return cachedPosts.posts, nil
+	return cachedPosts, nil
 }
 
 func (c Client) getPostsHelper(url string) ([]*Post, error) {
@@ -151,18 +146,22 @@ func (c Client) convertResponseToPosts(response *http.Response) ([]*Post, error)
 	return posts, nil
 }
 
-func (c Client) cachePosts(url, duration string, posts []*Post) {
+func (c Client) cachePosts(url, duration string, posts []*Post) (*CachedPosts, error) {
 	d, err := time.ParseDuration(duration)
 
 	if err != nil {
-		writeError(err)
-		return
+		return nil, err
 	}
 
 	expiresAt := time.Now().Add(d)
 
-	postsCache[url] = &cachedPosts{
+	cachedPosts := &CachedPosts{
 		posts:     posts,
+		timestamp: time.Now(),
 		expiresAt: expiresAt,
 	}
+
+	postsCache[url] = cachedPosts
+
+	return cachedPosts, nil
 }

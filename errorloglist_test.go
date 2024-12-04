@@ -72,7 +72,7 @@ func TestGetCompiledError(t *testing.T) {
 	}
 }
 
-func TestNew(t *testing.T) {
+func TestNewErrorLogList(t *testing.T) {
 	errorLogList := ErrorLogList{}.New(1, 999)
 
 	if len(errorLogList.errorList) != 0 {

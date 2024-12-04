@@ -22,7 +22,7 @@ func (i ClientInfo) fromEnv() ClientInfo {
 	err := godotenv.Load()
 
 	if err != nil {
-		writeError(err)
+		WriteError(err)
 	}
 
 	return ClientInfo{

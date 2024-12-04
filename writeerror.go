@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func writeError(err error) {
+func WriteError(err error) {
 	file, err2 := os.OpenFile(writeErrorPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
 	if err2 != nil {

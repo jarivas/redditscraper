@@ -81,6 +81,10 @@ func TestGetPostsClient(t *testing.T) {
 		t.Errorf("error happened, %v", err.Error())
 	}
 
+	if posts == nil || posts.posts == nil {
+		t.Errorf("error happened, %v", err.Error())
+	}
+
 	if len(posts.posts) == 0 {
 		t.Error("no posts token")
 	}

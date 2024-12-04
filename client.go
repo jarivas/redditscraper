@@ -65,7 +65,7 @@ func (c Client) getPosts(listing PostListing, subreddit, sort, duration string) 
 	cachedPosts, err := c.getCachedPosts(url)
 
 	if err != nil {
-		writeError(err)
+		WriteError(err)
 
 		return nil, err
 	}

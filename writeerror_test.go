@@ -3,8 +3,8 @@ package redditscraper
 import (
 	"errors"
 	"os"
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestWriteError(t *testing.T) {
@@ -14,7 +14,7 @@ func TestWriteError(t *testing.T) {
 		t.Errorf("Problem removing the log file %v", err.Error())
 	}
 
-	writeError(errors.New("test"))
+	WriteError(errors.New("test"))
 
 	b, err := os.ReadFile(writeErrorPath)
 

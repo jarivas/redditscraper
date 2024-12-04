@@ -8,7 +8,7 @@ import (
 
 type ErrorEntry struct {
 	timestamp time.Time
-	err   error
+	err       error
 }
 
 type ErrorLogList struct {
@@ -18,12 +18,12 @@ type ErrorLogList struct {
 	maxMilliseconds int64
 }
 
-func (e ErrorLogList) New(maxEntries,  maxMilliseconds int) ErrorLogList {
+func (e ErrorLogList) New(maxEntries, maxMilliseconds int) ErrorLogList {
 	list := make([]ErrorEntry, 0, maxEntries)
 
 	return ErrorLogList{
-		errorList: list,
-		maxEntries: maxEntries,
+		errorList:       list,
+		maxEntries:      maxEntries,
 		maxMilliseconds: int64(maxMilliseconds),
 	}
 }
@@ -35,14 +35,14 @@ func (e *ErrorLogList) LogError(err error) error {
 
 	now := time.Now()
 
-	writeError(err)
+	WriteError(err)
 
 	e.removeOlderErrors(now)
 
 	if e.hasCapacity() {
 		e.errorList = append(e.errorList, ErrorEntry{
 			timestamp: now,
-			err:   err,
+			err:       err,
 		})
 
 		return nil

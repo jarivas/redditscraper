@@ -3,7 +3,7 @@
 Scraps a particular subreddit
 
 ## Install
-```go get https://github.com/jarivas/redditscraper```
+```go get github.com/jarivas/redditscraper```
 
 ## Usage
 **.env**

@@ -11,31 +11,32 @@ package demo
 
 import (
 	"github.com/jarivas/redditscraper"
+    "fmt"
 )
 
 scraper, err := RedditScraper{}.New("AmItheAsshole", 10, 999)
 
-	if err != nil {
-		t.Error(err)
-	}
+if err != nil {
+    fmt.Errorf("There was an error: %v", err)
+}
 
-	if scraper == nil {
-		t.Error("Scraper is nil")
-	}
+if scraper == nil {
+    fmt.Error("Scraper is nil")
+}
 
-	c := make(chan *CachedPosts)
+c := make(chan *CachedPosts)
 
-	go func() {
-		err := scraper.Scrape(c)
+go func() {
+    err := scraper.Scrape(c)
 
-		close(c)
+    close(c)
 
-		t.Error(err)
-	}()
+    t.Error(err)
+}()
 
-	cachedPosts := <- c
+cachedPosts := <- c
 
-	if cachedPosts == nil {
-		t.Error("cachedPosts is nil")
-	}
+if cachedPosts == nil {
+    t.Error("cachedPosts is nil")
+}
 ```

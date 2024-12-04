@@ -12,8 +12,8 @@ type RedditScraper struct {
 	lastTimestamp time.Time
 }
 
-func (r RedditScraper) New(subreddit string, maxPosts, waitMilliseconds int) (*RedditScraper, error) {
-	c, err := Client{}.FromEnv()
+func (r RedditScraper) New(info ClientInfo, subreddit string, maxPosts, waitMilliseconds int) (*RedditScraper, error){
+	c, err := Client{}.New(info)
 
 	if err != nil {
 		return nil, err
@@ -30,6 +30,12 @@ func (r RedditScraper) New(subreddit string, maxPosts, waitMilliseconds int) (*R
 	}
 
 	return &rs, nil
+}
+
+func (r RedditScraper) FromEnv(subreddit string, maxPosts, waitMilliseconds int) (*RedditScraper, error) {
+	i := ClientInfo{}.fromEnv()
+
+	return r.New(i, subreddit, maxPosts, waitMilliseconds)
 }
 
 func (r RedditScraper) Scrape(c chan<- *CachedPosts) error {

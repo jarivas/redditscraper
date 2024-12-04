@@ -8,7 +8,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func TestFromEnv(t *testing.T) {
+func TestFromEnvClientInfo(t *testing.T) {
 	err := godotenv.Load()
 	
 	if err != nil {

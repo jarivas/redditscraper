@@ -52,7 +52,7 @@ func TestGetCachedPosts(t *testing.T) {
 	}
 }
 
-func TestGetNew(t *testing.T) {
+func TestFromEnvClient(t *testing.T) {
 	client, err := Client{}.FromEnv()
 
 	if err != nil {

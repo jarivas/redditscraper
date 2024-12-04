@@ -6,6 +6,14 @@ Scraps a particular subreddit
 ```go get https://github.com/jarivas/redditscraper```
 
 ## Usage
+**.env**
+```bash
+REDDIT_USERNAME=reddit_bot
+REDDIT_PASSWORD=snoo
+REDDIT_CLIENT_ID=p-jcoLKBynTLew
+REDDIT_APP_SECRET=gko_LXELoV07ZBNUXrvWZfzE3aI
+```
+**scraper.go**
 ```golang
 package demo
 
@@ -14,29 +22,39 @@ import (
     "fmt"
 )
 
-scraper, err := RedditScraper{}.New("AmItheAsshole", 10, 999)
+func main() {
+    scraper, err := RedditScraper{}.New("AmItheAsshole", 10, 999)
 
-if err != nil {
-    fmt.Errorf("There was an error: %v", err)
-}
+    if err != nil {
+        fmt.Errorf("There was an error: %v", err)
+    }
 
-if scraper == nil {
-    fmt.Error("Scraper is nil")
-}
+    if scraper == nil {
+        fmt.Error("Scraper is nil")
+    }
 
-c := make(chan *CachedPosts)
+    c := make(chan *CachedPosts)
 
-go func() {
-    err := scraper.Scrape(c)
+    go func() {
+        err := scraper.Scrape(c)
 
-    close(c)
+        close(c)
 
-    t.Error(err)
-}()
+        t.Error(err)
+    }()
 
-cachedPosts := <- c
+    cachedPosts := <- c
 
-if cachedPosts == nil {
-    t.Error("cachedPosts is nil")
+    if cachedPosts == nil {
+        t.Error("cachedPosts is nil")
+    }
 }
 ```
+
+For more flexibility please check:
+- **scraper.go**
+- **scraper_test.go**
+- **client.go**
+- **client_test.go**
+- **clientinfo.go**
+- **clientinfo_test.go**

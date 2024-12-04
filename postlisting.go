@@ -91,5 +91,5 @@ func (l PostListing) subredditDetailsParam() string {
 }
 
 func (l PostListing) getUrl(subreddit, sort string) string {
-	return fmt.Sprintf("/%v/%v?%v", subreddit, sort, l)
+	return fmt.Sprintf("%v/%v.json?json_raw=1&%v", subreddit, sort, l)
 }

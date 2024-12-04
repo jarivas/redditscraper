@@ -1,13 +1,14 @@
 package redditscraper
 
 import (
-	"time"
 	"encoding/json"
 	"net/http"
+	"time"
+	"errors"
 )
 
 type Client struct {
-	info  *ClientInfo
+	info  ClientInfo
 	token *oauthToken
 }
 
@@ -16,7 +17,28 @@ type cachedPosts struct {
 	expiresAt time.Time
 }
 
-var cache = make(map[string]*cachedPosts)
+var postsCache = map[string]*cachedPosts{}
+
+func (c Client) New(info ClientInfo) (*Client, error) {
+	token, err := info.getToken()
+
+	if err != nil {
+		return nil, err
+	}
+
+	client := Client{
+		info:  info,
+		token: token,
+	}
+
+	return &client, nil
+}
+
+func (c Client) FromEnv() (*Client, error) {
+	info := ClientInfo{}.fromEnv()
+
+	return c.New(info)
+}
 
 func (c Client) GetBestPosts(subreddit string, listing PostListing) ([]*Post, error) {
 	return c.getPosts(listing, subreddit, subredditBest, subredditCacheLong)
@@ -67,27 +89,27 @@ func (c Client) getPosts(listing PostListing, subreddit, sort, duration string) 
 }
 
 func (c Client) getCachedPosts(url string) ([]*Post, error) {
-	cachedPost := cache[url]
+	cachedPosts := postsCache[url]
 
-	if cachedPost == nil {
+	if cachedPosts == nil {
 		return nil, nil
 	}
 
 	now := time.Now()
 
-	if now.After(cachedPost.expiresAt) {
-		cache[url] = nil
+	if now.After(cachedPosts.expiresAt) {
+		postsCache[url] = nil
 
 		return nil, nil
 	}
 
-	return cachedPost.posts, nil
+	return cachedPosts.posts, nil
 }
 
 func (c Client) getPostsHelper(url string) ([]*Post, error) {
 	request, err := http.NewRequest(
 		"GET",
-		apiBaseUrl + url + "&raw_json=1.json",
+		apiPostsBaseUrl+url,
 		nil,
 	)
 
@@ -95,12 +117,16 @@ func (c Client) getPostsHelper(url string) ([]*Post, error) {
 		return nil, err
 	}
 
-	request.Header.Set("Authentication", "Bearer " + c.token.accessToken)
+	request.Header.Set("Authentication", "Bearer "+c.token.accessToken)
 
 	response, err := http.DefaultClient.Do(request)
 
 	if err != nil {
 		return nil, err
+	}
+
+	if response.StatusCode != 200 {
+		return nil, errors.New(response.Status)
 	}
 
 	return c.convertResponseToPosts(response)
@@ -112,14 +138,14 @@ func (c Client) convertResponseToPosts(response *http.Response) ([]*Post, error)
 
 	defer response.Body.Close()
 
-	err := json.NewDecoder(response.Body).Decode(body)
+	err := json.NewDecoder(response.Body).Decode(&body)
 
 	if err != nil {
 		return nil, err
 	}
 
-	for index, item := range(body.Data.Children) {
-		posts[index] = item.Data
+	for _, item := range body.Data.Children {
+		posts = append(posts, item.Data)
 	}
 
 	return posts, nil
@@ -135,8 +161,8 @@ func (c Client) cachePosts(url, duration string, posts []*Post) {
 
 	expiresAt := time.Now().Add(d)
 
-	cache[url] = &cachedPosts{
-		posts: posts,
+	postsCache[url] = &cachedPosts{
+		posts:     posts,
 		expiresAt: expiresAt,
 	}
 }

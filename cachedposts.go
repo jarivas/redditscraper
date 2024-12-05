@@ -13,11 +13,11 @@ type CachedPosts struct {
 func (c CachedPosts) GetNextId() string {
 	l := len(c.posts)
 
-	return c.posts[l-1].Name
+	return c.posts[l-1].Id
 }
 
 func (c CachedPosts) GetPreviousId() string {
-	return c.posts[0].Name
+	return c.posts[0].Id
 }
 
 func (c CachedPosts) GetPosts() []*Post {

@@ -29,7 +29,7 @@ func TestGetPostsCachedPost(t *testing.T) {
 
 	posts := cachedPosts.GetPosts()
 
-	if len(posts)!= 2 {
+	if len(posts) != 2 {
 		t.Error("invalid posts")
 	}
 }
@@ -38,12 +38,12 @@ func getCachedPosts() CachedPosts {
 	return CachedPosts{
 		posts: []*Post{
 			{
-				Name:  "01",
+				Id:    "01",
 				Title: "asd",
 				Body:  "asd",
 			},
 			{
-				Name:  "02",
+				Id:    "02",
 				Title: "asd",
 				Body:  "asd",
 			},

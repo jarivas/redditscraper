@@ -47,7 +47,7 @@ func TestGetCachedPosts(t *testing.T) {
 		t.Errorf("error caching post %v", err)
 	}
 
-	if posts[0].Name != cachedPosts.posts[0].Name {
+	if posts[0].Id != cachedPosts.posts[0].Id {
 		t.Error("the cache was not empty")
 	}
 }
@@ -93,7 +93,7 @@ func TestGetPostsClient(t *testing.T) {
 func cachePosts(c Client) []*Post {
 	posts := []*Post{
 		{
-			Name:  "asd",
+			Id:    "asd",
 			Title: "asd",
 			Body:  "asd",
 		},

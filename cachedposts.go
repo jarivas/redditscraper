@@ -23,3 +23,7 @@ func (c CachedPosts) GetPreviousId() string {
 func (c CachedPosts) GetPosts() []*Post {
 	return c.posts
 }
+
+func (c CachedPosts) HasPost() bool {
+	return len(c.posts) > 0
+}

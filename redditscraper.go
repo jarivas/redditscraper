@@ -19,7 +19,7 @@ func (r RedditScraper) New(subreddit string, maxPosts, waitMilliseconds int) (*R
 	if err != nil {
 		return nil, err
 	}
-	
+
 	dummy := fmt.Sprintf("%vms", waitMilliseconds)
 	waitTime, err := time.ParseDuration(dummy)
 
@@ -38,17 +38,21 @@ func (r RedditScraper) New(subreddit string, maxPosts, waitMilliseconds int) (*R
 	return &rs, nil
 }
 
-func (r RedditScraper) Scrape(c chan<- *CachedPosts, e chan<- error) {
+func (r RedditScraper) Scrape(c chan<- *CachedPosts, e chan<- error, nextId string) {
 	listing := PostListing{
-		Latest: true,
-		Limit:  r.maxPosts,
+		Id:    nextId,
+		Limit: r.maxPosts,
+	}
+
+	if nextId == "" {
+		listing.Latest = true
 	}
 
 	for {
 		cachedPosts, err := r.getPosts(listing)
 
 		if err == nil {
-			if cachedPosts != nil {
+			if cachedPosts != nil && cachedPosts.HasPost(){
 				listing.Id = cachedPosts.GetNextId()
 				listing.Latest = false
 

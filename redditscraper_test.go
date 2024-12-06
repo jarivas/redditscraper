@@ -32,7 +32,7 @@ func TestScrape(t *testing.T) {
 	e := make(chan error)
 
 	go func() {
-		scraper.Scrape(c, e)
+		scraper.Scrape(c, e, "")
 	}()
 
 	for {

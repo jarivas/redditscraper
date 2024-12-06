@@ -35,8 +35,6 @@ func (e *ErrorLogList) LogError(err error) error {
 
 	now := time.Now()
 
-	WriteError(err)
-
 	e.removeOlderErrors(now)
 
 	if e.hasCapacity() {

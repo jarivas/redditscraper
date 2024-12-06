@@ -10,35 +10,42 @@ import (
 
 func TestFromEnvClientInfo(t *testing.T) {
 	err := godotenv.Load()
-	
+
 	if err != nil {
 		t.Errorf("problem reading .env file, %v", err.Error())
 	}
 
-	i := ClientInfo{}.fromEnv()
+	i, err := clientInfo{}.new()
 
-	if i.Username != os.Getenv("REDDIT_USERNAME") {
-		t.Errorf("Invalid username: %v", i.Username)
+	if err != nil {
+		t.Errorf("problem creating %v", err.Error())
 	}
 
-	if i.Password != os.Getenv("REDDIT_PASSWORD") {
-		t.Errorf("Invalid password: %v", i.Password)
+	if i.username != os.Getenv("REDDIT_USERNAME") {
+		t.Errorf("Invalid username: %v", i.username)
 	}
 
-	if i.ClientId != os.Getenv("REDDIT_CLIENT_ID") {
-		t.Errorf("Invalid client id: %v", i.ClientId)
+	if i.password != os.Getenv("REDDIT_PASSWORD") {
+		t.Errorf("Invalid password: %v", i.password)
 	}
 
-	if i.AppSecret != os.Getenv("REDDIT_APP_SECRET") {
-		t.Errorf("Invalid app secret: %v", i.AppSecret)
+	if i.clientId != os.Getenv("REDDIT_CLIENT_ID") {
+		t.Errorf("Invalid client id: %v", i.clientId)
+	}
+
+	if i.appSecret != os.Getenv("REDDIT_APP_SECRET") {
+		t.Errorf("Invalid app secret: %v", i.appSecret)
 	}
 }
 
-
 func TestGetToken(t *testing.T) {
-	i := ClientInfo{}.fromEnv()
+	i, err := clientInfo{}.new()
+	
+	if err != nil {
+		t.Errorf("problem creating, %v", err.Error())
+	}
 
-	token , err := i.getToken()
+	token, err := i.getToken()
 
 	if err != nil {
 		t.Errorf("problem getting the token, %v", err.Error())

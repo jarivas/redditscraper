@@ -5,15 +5,15 @@ import (
 )
 
 type RedditScraper struct {
-	client        *Client
+	client        *client
 	subreddit     string
 	maxPosts      int
 	waitTime      time.Duration
 	lastTimestamp time.Time
 }
 
-func (r RedditScraper) New(info ClientInfo, subreddit string, maxPosts, waitMilliseconds int) (*RedditScraper, error){
-	c, err := Client{}.New(info)
+func (r RedditScraper) New(subreddit string, maxPosts, waitMilliseconds int) (*RedditScraper, error) {
+	c, err := client{}.new()
 
 	if err != nil {
 		return nil, err
@@ -32,13 +32,7 @@ func (r RedditScraper) New(info ClientInfo, subreddit string, maxPosts, waitMill
 	return &rs, nil
 }
 
-func (r RedditScraper) FromEnv(subreddit string, maxPosts, waitMilliseconds int) (*RedditScraper, error) {
-	i := ClientInfo{}.fromEnv()
-
-	return r.New(i, subreddit, maxPosts, waitMilliseconds)
-}
-
-func (r RedditScraper) Scrape(c chan<- *CachedPosts) error {
+func (r RedditScraper) Scrape(c chan<- *CachedPosts, e chan<- error) {
 	listing := PostListing{
 		Latest: true,
 		Limit:  r.maxPosts,
@@ -47,18 +41,18 @@ func (r RedditScraper) Scrape(c chan<- *CachedPosts) error {
 	for {
 		cachedPosts, err := r.getPosts(listing)
 
-		if err != nil {
-			return err
+		if err == nil {
+			if cachedPosts != nil {
+				listing.Id = cachedPosts.GetNextId()
+				listing.Latest = false
+
+				c <- cachedPosts
+			}
+		} else {
+			e <- err
 		}
 
 		time.Sleep(r.waitTime)
-
-		if cachedPosts != nil {
-			listing.Id = cachedPosts.GetNextId()
-			listing.Latest = false
-
-			c <- cachedPosts
-		}
 	}
 }
 

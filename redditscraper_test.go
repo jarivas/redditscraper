@@ -5,8 +5,8 @@ import (
 )
 
 
-func TestFromEnvScraper(t *testing.T) {
-	scraper, err := RedditScraper{}.FromEnv("AmItheAsshole", 10, 999)
+func TestNewScraper(t *testing.T) {
+	scraper, err := RedditScraper{}.New("AmItheAsshole", 10, 999)
 
 	if err != nil {
 		t.Error(err)
@@ -18,7 +18,7 @@ func TestFromEnvScraper(t *testing.T) {
 }
 
 func TestScrape(t *testing.T) {
-	scraper, err := RedditScraper{}.FromEnv("AmItheAsshole", 10, 999)
+	scraper, err := RedditScraper{}.New("AmItheAsshole", 10, 999)
 
 	if err != nil {
 		t.Error(err)
@@ -29,18 +29,22 @@ func TestScrape(t *testing.T) {
 	}
 
 	c := make(chan *CachedPosts)
+	e := make(chan error)
 
 	go func() {
-		err := scraper.Scrape(c)
-
-		close(c)
-
-		t.Error(err)
+		scraper.Scrape(c, e)
 	}()
 
-	cachedPosts := <- c
-
-	if cachedPosts == nil {
-		t.Error("cachedPosts is nil")
+	for {
+		select{
+			case cachedPosts := <- c: 
+				if cachedPosts == nil {
+					t.Error("cachedPosts is nil")
+				}
+				return
+			case err = <- e: 
+				t.Error(err)
+				return
+		}	
 	}
 }

@@ -6,7 +6,7 @@ import (
 )
 
 func TestCachePosts(t *testing.T) {
-	client := Client{}
+	client := client{}
 	posts := cachePosts(client)
 
 	client.cachePosts("asd", subredditCacheLong, posts)
@@ -23,7 +23,7 @@ func TestCachePosts(t *testing.T) {
 }
 
 func TestGetCachedPosts(t *testing.T) {
-	client := Client{}
+	client := client{}
 
 	postsCache = map[string]*CachedPosts{}
 
@@ -52,8 +52,8 @@ func TestGetCachedPosts(t *testing.T) {
 	}
 }
 
-func TestFromEnvClient(t *testing.T) {
-	client, err := Client{}.FromEnv()
+func TestNewClient(t *testing.T) {
+	client, err := client{}.new()
 
 	if err != nil {
 		t.Errorf("error happened, %v", err.Error())
@@ -65,7 +65,7 @@ func TestFromEnvClient(t *testing.T) {
 }
 
 func TestGetPostsClient(t *testing.T) {
-	client, err := Client{}.FromEnv()
+	client, err := client{}.new()
 
 	if err != nil {
 		t.Errorf("error happened, %v", err.Error())
@@ -90,7 +90,7 @@ func TestGetPostsClient(t *testing.T) {
 	}
 }
 
-func cachePosts(c Client) []*Post {
+func cachePosts(c client) []*Post {
 	posts := []*Post{
 		{
 			Id:    "asd",

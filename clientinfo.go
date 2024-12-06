@@ -11,29 +11,29 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type ClientInfo struct {
-	Username  string
-	Password  string
-	ClientId  string
-	AppSecret string
+type clientInfo struct {
+	username  string
+	password  string
+	clientId  string
+	appSecret string
 }
 
-func (i ClientInfo) fromEnv() ClientInfo {
+func (i clientInfo) new() (*clientInfo, error) {
 	err := godotenv.Load()
 
 	if err != nil {
-		WriteError(err)
+		return nil, err
 	}
 
-	return ClientInfo{
-		Username:  os.Getenv("REDDIT_USERNAME"),
-		Password:  os.Getenv("REDDIT_PASSWORD"),
-		ClientId:  os.Getenv("REDDIT_CLIENT_ID"),
-		AppSecret: os.Getenv("REDDIT_APP_SECRET"),
-	}
+	return &clientInfo{
+		username:  os.Getenv("REDDIT_USERNAME"),
+		password:  os.Getenv("REDDIT_PASSWORD"),
+		clientId:  os.Getenv("REDDIT_CLIENT_ID"),
+		appSecret: os.Getenv("REDDIT_APP_SECRET"),
+	}, nil
 }
 
-func (i ClientInfo) getToken() (*oauthToken, error) {
+func (i clientInfo) getToken() (*oauthToken, error) {
 	response, err := i.getTokenResponse()
 
 	if err != nil {
@@ -52,12 +52,12 @@ func (i ClientInfo) getToken() (*oauthToken, error) {
 	return token.convert()
 }
 
-func (i ClientInfo) getTokenResponse() (*http.Response, error) {
+func (i clientInfo) getTokenResponse() (*http.Response, error) {
 
 	body := fmt.Sprintf(
 		"grant_type=password&username=%v&password=%v",
-		i.Username,
-		i.Password,
+		i.username,
+		i.password,
 	)
 
 	request, err := http.NewRequest(
@@ -70,7 +70,7 @@ func (i ClientInfo) getTokenResponse() (*http.Response, error) {
 		return nil, err
 	}
 
-	request.SetBasicAuth(i.ClientId, i.AppSecret)
+	request.SetBasicAuth(i.clientId, i.appSecret)
 
 	return http.DefaultClient.Do(request)
 }

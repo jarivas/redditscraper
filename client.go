@@ -7,21 +7,27 @@ import (
 	"time"
 )
 
-type Client struct {
-	info  ClientInfo
+type client struct {
+	info  *clientInfo
 	token *oauthToken
 }
 
 var postsCache = map[string]*CachedPosts{}
 
-func (c Client) New(info ClientInfo) (*Client, error) {
+func (c client) new() (*client, error) {
+	info, err := clientInfo{}.new()
+
+	if err != nil {
+		return nil, err
+	}
+
 	token, err := info.getToken()
 
 	if err != nil {
 		return nil, err
 	}
 
-	client := Client{
+	client := client{
 		info:  info,
 		token: token,
 	}
@@ -29,44 +35,36 @@ func (c Client) New(info ClientInfo) (*Client, error) {
 	return &client, nil
 }
 
-func (c Client) FromEnv() (*Client, error) {
-	info := ClientInfo{}.fromEnv()
-
-	return c.New(info)
-}
-
-func (c Client) GetBestPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
+func (c client) GetBestPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
 	return c.getPosts(listing, subreddit, subredditBest, subredditCacheLong)
 }
 
-func (c Client) GetNewPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
+func (c client) GetNewPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
 	return c.getPosts(listing, subreddit, subredditNew, subredditCache1Short)
 }
 
-func (c Client) GetRandomPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
+func (c client) GetRandomPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
 	return c.getPosts(listing, subreddit, subredditRandom, subredditCache1Short)
 }
 
-func (c Client) GetRisingPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
+func (c client) GetRisingPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
 	return c.getPosts(listing, subreddit, subredditRising, subredditCacheLong)
 }
 
-func (c Client) GetTopPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
+func (c client) GetTopPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
 	return c.getPosts(listing, subreddit, subredditTop, subredditCacheLong)
 }
 
-func (c Client) GetControversialPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
+func (c client) GetControversialPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
 	return c.getPosts(listing, subreddit, subredditControversial, subredditCacheLong)
 }
 
-func (c Client) getPosts(listing PostListing, subreddit, sort, duration string) (*CachedPosts, error) {
+func (c client) getPosts(listing PostListing, subreddit, sort, duration string) (*CachedPosts, error) {
 	url := listing.getUrl(subreddit, sort)
 
 	cachedPosts, err := c.getCachedPosts(url)
 
 	if err != nil {
-		WriteError(err)
-
 		return nil, err
 	}
 
@@ -83,7 +81,7 @@ func (c Client) getPosts(listing PostListing, subreddit, sort, duration string) 
 	return c.cachePosts(url, duration, posts)
 }
 
-func (c Client) getCachedPosts(url string) (*CachedPosts, error) {
+func (c client) getCachedPosts(url string) (*CachedPosts, error) {
 	cachedPosts := postsCache[url]
 
 	if cachedPosts == nil {
@@ -101,7 +99,7 @@ func (c Client) getCachedPosts(url string) (*CachedPosts, error) {
 	return cachedPosts, nil
 }
 
-func (c Client) getPostsHelper(url string) ([]*Post, error) {
+func (c client) getPostsHelper(url string) ([]*Post, error) {
 	request, err := http.NewRequest(
 		"GET",
 		apiPostsBaseUrl+url,
@@ -127,7 +125,7 @@ func (c Client) getPostsHelper(url string) ([]*Post, error) {
 	return c.convertResponseToPosts(response)
 }
 
-func (c Client) convertResponseToPosts(response *http.Response) ([]*Post, error) {
+func (c client) convertResponseToPosts(response *http.Response) ([]*Post, error) {
 	var body PostListingResponse
 	posts := []*Post{}
 
@@ -146,7 +144,7 @@ func (c Client) convertResponseToPosts(response *http.Response) ([]*Post, error)
 	return posts, nil
 }
 
-func (c Client) cachePosts(url, duration string, posts []*Post) (*CachedPosts, error) {
+func (c client) cachePosts(url, duration string, posts []*Post) (*CachedPosts, error) {
 	d, err := time.ParseDuration(duration)
 
 	if err != nil {

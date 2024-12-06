@@ -20,34 +20,39 @@ package demo
 import (
 	"github.com/jarivas/redditscraper"
     "fmt"
+    "log"
 )
 
 func main() {
-    scraper, err := RedditScraper{}.FromEnv("AmItheAsshole", 10, 999)
+    scraper, err := RedditScraper{}.New("AmItheAsshole", 10, 999)
 
-    if err != nil {
-        fmt.Errorf("There was an error: %v", err)
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    if scraper == nil {
-        fmt.Error("Scraper is nil")
-    }
+	if scraper == nil {
+		log.Fatal("Scraper is nil")
+	}
 
-    c := make(chan *CachedPosts)
+	c := make(chan *CachedPosts)
+	e := make(chan error)
 
-    go func() {
-        err := scraper.Scrape(c)
+	go func() {
+		scraper.Scrape(c, e)
+	}()
 
-        close(c)
-
-        t.Error(err)
-    }()
-
-    cachedPosts := <- c
-
-    if cachedPosts == nil {
-        t.Error("cachedPosts is nil")
-    }
+	for {
+		select{
+			case cachedPosts := <- c: 
+				if cachedPosts == nil {
+					log.Fatal("cachedPosts is nil")
+				}
+				return
+			case err = <- e: 
+				log.Fatal(err)
+				return
+		}	
+	}
 }
 ```
 

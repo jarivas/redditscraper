@@ -18,7 +18,7 @@ func TestNewScraper(t *testing.T) {
 }
 
 func TestScrape(t *testing.T) {
-	scraper, err := RedditScraper{}.New("AmItheAsshole", 10, 999)
+	scraper, err := RedditScraper{}.New("AmItheAsshole", 10, 1000)
 
 	if err != nil {
 		t.Error(err)

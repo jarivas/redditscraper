@@ -1,6 +1,7 @@
 package redditscraper
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -18,8 +19,13 @@ func (r RedditScraper) New(subreddit string, maxPosts, waitMilliseconds int) (*R
 	if err != nil {
 		return nil, err
 	}
+	
+	dummy := fmt.Sprintf("%vms", waitMilliseconds)
+	waitTime, err := time.ParseDuration(dummy)
 
-	waitTime := time.Duration(waitMilliseconds) * time.Microsecond
+	if err != nil {
+		return nil, err
+	}
 
 	rs := RedditScraper{
 		client:        c,

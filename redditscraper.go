@@ -6,7 +6,7 @@ import (
 )
 
 type RedditScraper struct {
-	client        *client
+	client        *RedditClient
 	subreddit     string
 	maxPosts      int
 	waitTime      time.Duration
@@ -14,7 +14,7 @@ type RedditScraper struct {
 }
 
 func (r RedditScraper) New(subreddit string, maxPosts, waitMilliseconds int) (*RedditScraper, error) {
-	c, err := client{}.new()
+	c, err := RedditClient{}.FromEnv()
 
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (r RedditScraper) Scrape(c chan<- *CachedPosts, e chan<- error, nextId stri
 		cachedPosts, err := r.getPosts(listing)
 
 		if err == nil {
-			if cachedPosts != nil && cachedPosts.HasPost(){
+			if cachedPosts != nil && cachedPosts.HasPost() {
 				listing.Id = cachedPosts.GetNextId()
 				listing.Latest = false
 

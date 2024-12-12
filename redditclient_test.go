@@ -6,7 +6,7 @@ import (
 )
 
 func TestCachePosts(t *testing.T) {
-	client := client{}
+	client := RedditClient{}
 	posts := cachePosts(client)
 
 	client.cachePosts("asd", subredditCacheLong, posts)
@@ -23,7 +23,7 @@ func TestCachePosts(t *testing.T) {
 }
 
 func TestGetCachedPosts(t *testing.T) {
-	client := client{}
+	client := RedditClient{}
 
 	postsCache = map[string]*CachedPosts{}
 
@@ -53,19 +53,19 @@ func TestGetCachedPosts(t *testing.T) {
 }
 
 func TestNewClient(t *testing.T) {
-	client, err := client{}.new()
+	client, err := RedditClient{}.FromEnv()
 
 	if err != nil {
 		t.Errorf("error happened, %v", err.Error())
 	}
 
-	if client.token.accessToken == "" {
-		t.Error("no access token")
+	if client == nil {
+		t.Error("client is nil")
 	}
 }
 
 func TestGetPostsClient(t *testing.T) {
-	client, err := client{}.new()
+	client, err := RedditClient{}.FromEnv()
 
 	if err != nil {
 		t.Errorf("error happened, %v", err.Error())
@@ -90,7 +90,7 @@ func TestGetPostsClient(t *testing.T) {
 	}
 }
 
-func cachePosts(c client) []*Post {
+func cachePosts(c RedditClient) []*Post {
 	posts := []*Post{
 		{
 			Id:    "asd",

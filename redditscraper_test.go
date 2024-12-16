@@ -6,7 +6,7 @@ import (
 
 
 func TestNewScraper(t *testing.T) {
-	scraper, err := RedditScraper{}.New("AmItheAsshole", 10, 999)
+	scraper, err := RedditScraper{}.New("AmItheAsshole")
 
 	if err != nil {
 		t.Error(err)
@@ -18,7 +18,7 @@ func TestNewScraper(t *testing.T) {
 }
 
 func TestScrape(t *testing.T) {
-	scraper, err := RedditScraper{}.New("AmItheAsshole", 10, 1000)
+	scraper, err := RedditScraper{}.New("AmItheAsshole")
 
 	if err != nil {
 		t.Error(err)
@@ -31,9 +31,7 @@ func TestScrape(t *testing.T) {
 	c := make(chan *CachedPosts)
 	e := make(chan error)
 
-	go func() {
-		scraper.Scrape(c, e, "")
-	}()
+	go scraper.Scrape(c, e, "")
 
 	for {
 		select{

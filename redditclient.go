@@ -7,13 +7,17 @@ import (
 	"time"
 )
 
-type RedditClient struct {
-	ri  *RedditInfo
-}
-
+var waitTime time.Duration = 1000000000
+var nextRequestWait time.Duration = 5000000000
+var nextRequest time.Time = time.Now()
 var postsCache = map[string]*CachedPosts{}
 
-func (c RedditClient) New(ri *RedditInfo) (*RedditClient, error) {
+type RedditClient struct {
+	ri  *RedditInfo
+	subreddit string
+}
+
+func (c RedditClient) New(subreddit string, ri *RedditInfo) (*RedditClient, error) {
 	err := c.refreshToken(ri)
 
 	if err != nil {
@@ -22,47 +26,48 @@ func (c RedditClient) New(ri *RedditInfo) (*RedditClient, error) {
 
 	client := RedditClient{
 		ri:  ri,
+		subreddit: subreddit,
 	}
 
 	return &client, nil
 }
 
-func (c RedditClient) FromEnv() (*RedditClient, error) {
+func (c RedditClient) FromEnv(subreddit string) (*RedditClient, error) {
 	ri, err := RedditInfo{}.FromEnv()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return c.New(ri)
+	return c.New(subreddit, ri)
 }
 
-func (c RedditClient) GetBestPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
-	return c.getPosts(listing, subreddit, subredditBest, subredditCacheLong)
+func (c *RedditClient) GetBestPosts(listing PostListing) (*CachedPosts, error) {
+	return c.getPosts(listing, subredditBest, subredditCacheLong)
 }
 
-func (c RedditClient) GetNewPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
-	return c.getPosts(listing, subreddit, subredditNew, subredditCache1Short)
+func (c *RedditClient) GetNewPosts(listing PostListing) (*CachedPosts, error) {
+	return c.getPosts(listing, subredditNew, subredditCache1Short)
 }
 
-func (c RedditClient) GetRandomPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
-	return c.getPosts(listing, subreddit, subredditRandom, subredditCache1Short)
+func (c *RedditClient) GetRandomPosts(listing PostListing) (*CachedPosts, error) {
+	return c.getPosts(listing, subredditRandom, subredditCache1Short)
 }
 
-func (c RedditClient) GetRisingPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
-	return c.getPosts(listing, subreddit, subredditRising, subredditCacheLong)
+func (c *RedditClient) GetRisingPosts(listing PostListing) (*CachedPosts, error) {
+	return c.getPosts(listing, subredditRising, subredditCacheLong)
 }
 
-func (c RedditClient) GetTopPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
-	return c.getPosts(listing, subreddit, subredditTop, subredditCacheLong)
+func (c *RedditClient) GetTopPosts(listing PostListing) (*CachedPosts, error) {
+	return c.getPosts(listing, subredditTop, subredditCacheLong)
 }
 
-func (c RedditClient) GetControversialPosts(subreddit string, listing PostListing) (*CachedPosts, error) {
-	return c.getPosts(listing, subreddit, subredditControversial, subredditCacheLong)
+func (c *RedditClient) GetControversialPosts(listing PostListing) (*CachedPosts, error) {
+	return c.getPosts(listing, subredditControversial, subredditCacheLong)
 }
 
-func (c RedditClient) getPosts(listing PostListing, subreddit, sort, duration string) (*CachedPosts, error) {
-	url := listing.getUrl(subreddit, sort)
+func (c *RedditClient) getPosts(listing PostListing, sort, duration string) (*CachedPosts, error) {
+	url := listing.getUrl(c.subreddit, sort)
 
 	cachedPosts, err := c.getCachedPosts(url)
 
@@ -83,7 +88,7 @@ func (c RedditClient) getPosts(listing PostListing, subreddit, sort, duration st
 	return c.cachePosts(url, duration, posts)
 }
 
-func (c RedditClient) getCachedPosts(url string) (*CachedPosts, error) {
+func (c *RedditClient) getCachedPosts(url string) (*CachedPosts, error) {
 	cachedPosts := postsCache[url]
 
 	if cachedPosts == nil {
@@ -101,12 +106,14 @@ func (c RedditClient) getCachedPosts(url string) (*CachedPosts, error) {
 	return cachedPosts, nil
 }
 
-func (c RedditClient) getPostsHelper(url string) ([]*Post, error) {
+func (c *RedditClient) getPostsHelper(url string) ([]*Post, error) {
 	err := c.refreshToken(c.ri)
 
 	if err != nil {
 		return nil, err
 	}
+
+	c.wait()
 
 	request, err := http.NewRequest(
 		"GET",
@@ -138,10 +145,12 @@ func (c RedditClient) getPostsHelper(url string) ([]*Post, error) {
 	return c.convertResponseToPosts(response)
 }
 
-func (c RedditClient) refreshToken(ri *RedditInfo) error {
+func (c *RedditClient) refreshToken(ri *RedditInfo) error {
 	if currentToken != nil && currentToken.expiresAt.After(time.Now()) {
 		return nil
 	}
+	
+	c.wait()
 
 	t, err := ri.getToken()
 
@@ -154,7 +163,15 @@ func (c RedditClient) refreshToken(ri *RedditInfo) error {
 	return nil
 }
 
-func (c RedditClient) convertResponseToPosts(response *http.Response) ([]*Post, error) {
+func (c *RedditClient) wait() {
+	for ; nextRequest.After(time.Now()); {
+		time.Sleep(waitTime)
+	}
+	
+	nextRequest = time.Now().Add(nextRequestWait)
+}
+
+func (c *RedditClient) convertResponseToPosts(response *http.Response) ([]*Post, error) {
 	var body PostListingResponse
 	posts := []*Post{}
 
@@ -173,7 +190,7 @@ func (c RedditClient) convertResponseToPosts(response *http.Response) ([]*Post, 
 	return posts, nil
 }
 
-func (c RedditClient) cachePosts(url, duration string, posts []*Post) (*CachedPosts, error) {
+func (c *RedditClient) cachePosts(url, duration string, posts []*Post) (*CachedPosts, error) {
 	d, err := time.ParseDuration(duration)
 
 	if err != nil {
@@ -192,4 +209,3 @@ func (c RedditClient) cachePosts(url, duration string, posts []*Post) (*CachedPo
 
 	return cachedPosts, nil
 }
-

@@ -1,7 +1,6 @@
 package redditscraper
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -9,19 +8,11 @@ type RedditScraper struct {
 	client        *RedditClient
 	subreddit     string
 	maxPosts      int
-	waitTime      time.Duration
 	lastTimestamp time.Time
 }
 
-func (r RedditScraper) New(subreddit string, maxPosts, waitMilliseconds int) (*RedditScraper, error) {
-	c, err := RedditClient{}.FromEnv()
-
-	if err != nil {
-		return nil, err
-	}
-
-	dummy := fmt.Sprintf("%vms", waitMilliseconds)
-	waitTime, err := time.ParseDuration(dummy)
+func (r RedditScraper) New(subreddit string) (*RedditScraper, error) {
+	c, err := RedditClient{}.FromEnv("AmItheAsshole")
 
 	if err != nil {
 		return nil, err
@@ -31,7 +22,6 @@ func (r RedditScraper) New(subreddit string, maxPosts, waitMilliseconds int) (*R
 		client:        c,
 		subreddit:     subreddit,
 		maxPosts:      maxPosts,
-		waitTime:      waitTime,
 		lastTimestamp: time.Now(),
 	}
 
@@ -62,12 +52,12 @@ func (r RedditScraper) Scrape(c chan<- *CachedPosts, e chan<- error, nextId stri
 			e <- err
 		}
 
-		time.Sleep(r.waitTime)
+		time.Sleep(waitTime)
 	}
 }
 
 func (r *RedditScraper) getPosts(listing PostListing) (*CachedPosts, error) {
-	cachedPosts, err := r.client.GetTopPosts(r.subreddit, listing)
+	cachedPosts, err := r.client.GetTopPosts(listing)
 
 	if err != nil {
 		return nil, err

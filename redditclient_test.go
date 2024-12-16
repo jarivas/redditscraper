@@ -53,7 +53,7 @@ func TestGetCachedPosts(t *testing.T) {
 }
 
 func TestNewClient(t *testing.T) {
-	client, err := RedditClient{}.FromEnv()
+	client, err := RedditClient{}.FromEnv("AmItheAsshole")
 
 	if err != nil {
 		t.Errorf("error happened, %v", err.Error())
@@ -65,7 +65,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestGetPostsClient(t *testing.T) {
-	client, err := RedditClient{}.FromEnv()
+	client, err := RedditClient{}.FromEnv("AmItheAsshole")
 
 	if err != nil {
 		t.Errorf("error happened, %v", err.Error())
@@ -75,7 +75,7 @@ func TestGetPostsClient(t *testing.T) {
 		Latest: true,
 	}
 
-	posts, err := client.GetTopPosts("AmItheAsshole", listing)
+	posts, err := client.GetTopPosts(listing)
 
 	if err != nil {
 		t.Errorf("error happened, %v", err.Error())

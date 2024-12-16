@@ -6,32 +6,32 @@ import (
 
 type RedditScraper struct {
 	client        *RedditClient
-	subreddit     string
-	maxPosts      int
 	lastTimestamp time.Time
 }
 
-func (r RedditScraper) New(subreddit string) (*RedditScraper, error) {
-	c, err := RedditClient{}.FromEnv("AmItheAsshole")
-
-	if err != nil {
-		return nil, err
-	}
-
+func (r RedditScraper) New(c *RedditClient) (*RedditScraper, error) {
 	rs := RedditScraper{
 		client:        c,
-		subreddit:     subreddit,
-		maxPosts:      maxPosts,
 		lastTimestamp: time.Now(),
 	}
 
 	return &rs, nil
 }
 
-func (r RedditScraper) Scrape(c chan<- *CachedPosts, e chan<- error, nextId string) {
+func (r RedditScraper) FromEnv(subreddit string) (*RedditScraper, error) {
+	c, err := RedditClient{}.FromEnv("AmItheAsshole")
+
+	if err != nil {
+		return nil, err
+	}
+
+	return r.New(c)
+}
+
+func (r *RedditScraper) Scrape(c chan<- *CachedPosts, e chan<- error, nextId string) {
 	listing := PostListing{
 		Id:    nextId,
-		Limit: r.maxPosts,
+		Limit: maxPosts,
 	}
 
 	if nextId == "" {

@@ -24,7 +24,7 @@ import (
 )
 
 func main() {
-    scraper, err := RedditScraper{}.New("AmItheAsshole", 10, 999)
+    scraper, err := RedditScraper{}.FromEnv("AmItheAsshole")
 
 	if err != nil {
 		log.Fatal(err)
@@ -37,9 +37,7 @@ func main() {
 	c := make(chan *CachedPosts)
 	e := make(chan error)
 
-	go func() {
-		scraper.Scrape(c, e)
-	}()
+	go scraper.Scrape(c, e)
 
 	for {
 		select{

@@ -6,7 +6,7 @@ import (
 
 
 func TestNewScraper(t *testing.T) {
-	scraper, err := RedditScraper{}.New("AmItheAsshole")
+	scraper, err := RedditScraper{}.FromEnv("AmItheAsshole")
 
 	if err != nil {
 		t.Error(err)
@@ -18,7 +18,7 @@ func TestNewScraper(t *testing.T) {
 }
 
 func TestScrape(t *testing.T) {
-	scraper, err := RedditScraper{}.New("AmItheAsshole")
+	scraper, err := RedditScraper{}.FromEnv("AmItheAsshole")
 
 	if err != nil {
 		t.Error(err)

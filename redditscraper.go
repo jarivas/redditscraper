@@ -28,6 +28,10 @@ func (r RedditScraper) FromEnv(subreddit string) (*RedditScraper, error) {
 	return r.New(c)
 }
 
+func (r *RedditScraper) GetSubreddit() string {
+	return r.client.subreddit
+}
+
 func (r *RedditScraper) Scrape(c chan<- *CachedPosts, e chan<- error, nextId string) {
 	listing := PostListing{
 		Id:    nextId,

@@ -13,7 +13,7 @@ var nextRequest time.Time = time.Now()
 var postsCache = map[string]*CachedPosts{}
 
 type RedditClient struct {
-	ri  *RedditInfo
+	ri        *RedditInfo
 	subreddit string
 }
 
@@ -25,7 +25,7 @@ func (c RedditClient) New(subreddit string, ri *RedditInfo) (*RedditClient, erro
 	}
 
 	client := RedditClient{
-		ri:  ri,
+		ri:        ri,
 		subreddit: subreddit,
 	}
 
@@ -43,27 +43,47 @@ func (c RedditClient) FromEnv(subreddit string) (*RedditClient, error) {
 }
 
 func (c *RedditClient) GetBestPosts(listing PostListing) (*CachedPosts, error) {
-	return c.getPosts(listing, subredditBest, subredditCacheLong)
+	return c.getPosts(listing, SubredditBest, subredditCacheLong)
 }
 
 func (c *RedditClient) GetNewPosts(listing PostListing) (*CachedPosts, error) {
-	return c.getPosts(listing, subredditNew, subredditCache1Short)
+	return c.getPosts(listing, SubredditNew, subredditCache1Short)
 }
 
 func (c *RedditClient) GetRandomPosts(listing PostListing) (*CachedPosts, error) {
-	return c.getPosts(listing, subredditRandom, subredditCache1Short)
+	return c.getPosts(listing, SubredditRandom, subredditCache1Short)
 }
 
 func (c *RedditClient) GetRisingPosts(listing PostListing) (*CachedPosts, error) {
-	return c.getPosts(listing, subredditRising, subredditCacheLong)
+	return c.getPosts(listing, SubredditRising, subredditCacheLong)
 }
 
 func (c *RedditClient) GetTopPosts(listing PostListing) (*CachedPosts, error) {
-	return c.getPosts(listing, subredditTop, subredditCacheLong)
+	return c.getPosts(listing, SubredditTop, subredditCacheLong)
 }
 
 func (c *RedditClient) GetControversialPosts(listing PostListing) (*CachedPosts, error) {
-	return c.getPosts(listing, subredditControversial, subredditCacheLong)
+	return c.getPosts(listing, SubredditControversial, subredditCacheLong)
+}
+
+func (c *RedditClient) GetSortedPost(listing PostListing, sort string) (*CachedPosts, error) {
+	var cp *CachedPosts
+	var err error
+
+	switch sort {
+	case SubredditBest:
+		cp, err = c.GetBestPosts(listing)
+	case SubredditNew:
+		cp, err = c.GetNewPosts(listing)
+	case SubredditRandom:
+		cp, err = c.GetRandomPosts(listing)
+	case SubredditRising:
+		cp, err = c.GetRisingPosts(listing)
+	case SubredditTop:
+		cp, err = c.GetTopPosts(listing)
+	}
+
+	return cp, err
 }
 
 func (c *RedditClient) getPosts(listing PostListing, sort, duration string) (*CachedPosts, error) {
@@ -125,7 +145,7 @@ func (c *RedditClient) getPostsHelper(url string) ([]*Post, error) {
 		return nil, err
 	}
 
-	request.Header.Set("Authentication", "Bearer "+currentToken.accessToken )
+	request.Header.Set("Authentication", "Bearer "+currentToken.accessToken)
 
 	response, err := http.DefaultClient.Do(request)
 
@@ -149,7 +169,7 @@ func (c *RedditClient) refreshToken(ri *RedditInfo) error {
 	if currentToken != nil && currentToken.expiresAt.After(time.Now()) {
 		return nil
 	}
-	
+
 	c.wait()
 
 	t, err := ri.getToken()
@@ -164,10 +184,10 @@ func (c *RedditClient) refreshToken(ri *RedditInfo) error {
 }
 
 func (c *RedditClient) wait() {
-	for ; nextRequest.After(time.Now()); {
+	for nextRequest.After(time.Now()) {
 		time.Sleep(waitTime)
 	}
-	
+
 	nextRequest = time.Now().Add(nextRequestWait)
 }
 

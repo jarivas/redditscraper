@@ -37,7 +37,7 @@ func main() {
 	c := make(chan *CachedPosts)
 	e := make(chan error)
 
-	go scraper.Scrape(c, e)
+	go scraper.ScrapeAll(c, e)
 
 	for {
 		select{

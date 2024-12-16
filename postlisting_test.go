@@ -86,7 +86,7 @@ func TestGetUrl(t *testing.T) {
 		SubredditDetail: true,
 	}
 
-	url := l.getUrl("AmItheAsshole", subredditTop)
+	url := l.getUrl("AmItheAsshole", SubredditTop)
 
 	if url != "AmItheAsshole/top.json?json_raw=1&limit=100&t=all&show=all&sr_details=" {
 		t.Errorf("Invalid url: %v", url)

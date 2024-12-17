@@ -24,32 +24,25 @@ import (
 )
 
 func main() {
-    scraper, err := RedditScraper{}.FromEnv("AmItheAsshole")
+   rs, err := RedditScraper{}.FromEnv("redditdev")
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if scraper == nil {
-		log.Fatal("Scraper is nil")
-	}
-
-	c := make(chan *CachedPosts)
+	p := make(chan *Post)
 	e := make(chan error)
 
-	go scraper.ScrapeAll(c, e)
+	go rs.Listen(SubredditBest, p, e)
 
 	for {
 		select{
-			case cachedPosts := <- c: 
-				if cachedPosts == nil {
-					log.Fatal("cachedPosts is nil")
-				}
-				return
-			case err = <- e: 
-				log.Fatal(err)
-				return
-		}	
+		case post := <- p:
+			log.Println(post)
+			return
+		case err = <- e:
+			log.Fatal(err)
+		}
 	}
 }
 ```

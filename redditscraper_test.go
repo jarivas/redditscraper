@@ -1,77 +1,37 @@
 package redditscraper
 
 import (
+	"log"
 	"testing"
 )
 
-func TestNewScraper(t *testing.T) {
-	scraper, err := RedditScraper{}.FromEnv("AmItheAsshole")
+func TestNew(t *testing.T) {
+	_, err := RedditScraper{}.FromEnv("redditdev")
 
 	if err != nil {
 		t.Error(err)
-	}
-
-	if scraper == nil {
-		t.Error("Scraper is nil")
 	}
 }
 
-func TestScrape(t *testing.T) {
-	scraper, err := RedditScraper{}.FromEnv("AmItheAsshole")
+func TestListen(t *testing.T) {
+	rs, err := RedditScraper{}.FromEnv("redditdev")
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	if scraper == nil {
-		t.Error("Scraper is nil")
-	}
-
-	c := make(chan *CachedPosts)
+	p := make(chan *Post)
 	e := make(chan error)
 
-	go scraper.Scrape(c, e, "", SubredditBest)
+	go rs.Listen(SubredditBest, p, e)
 
 	for {
-		select {
-		case cachedPosts := <-c:
-			if cachedPosts == nil {
-				t.Error("cachedPosts is nil")
-			}
+		select{
+		case post := <- p:
+			log.Println(post)
 			return
-		case err = <-e:
+		case err = <- e:
 			t.Error(err)
-			return
-		}
-	}
-}
-
-func TestScrapeAll(t *testing.T) {
-	scraper, err := RedditScraper{}.FromEnv("AmItheAsshole")
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	if scraper == nil {
-		t.Error("Scraper is nil")
-	}
-
-	c := make(chan *CachedPosts)
-	e := make(chan error)
-
-	go scraper.ScrapeAll(c, e)
-
-	for {
-		select {
-		case cachedPosts := <-c:
-			if cachedPosts == nil {
-				t.Error("cachedPosts is nil")
-			}
-			return
-		case err = <-e:
-			t.Error(err)
-			return
 		}
 	}
 }

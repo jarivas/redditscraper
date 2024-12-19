@@ -67,21 +67,22 @@ func (c *RedditScraper) getPosts(sort string, listing PostListing, p chan<- *Pos
 
 		if url == lastUrl {
 			e <- errors.New("repeated same request url: " + url)
-			c.wait()
 		}
 
 		posts, err := c.getPostsHelper(url)
 
 		if err != nil {
 			e <- err
-		}
-
-		if l = len(posts); l == 0 {
-			e <- errors.New("empty posts respomse on:" + url)
 		} else {
-			c.channelPosts(posts, p)
-			listing.Id = posts[l-1].Id
+			if l = len(posts); l == 0 {
+				e <- errors.New("empty posts respomse on:" + url)
+			} else {
+				c.channelPosts(posts, p)
+				listing.Id = posts[l-1].Id
+			}
 		}
+		
+		c.wait()
 	}
 }
 
@@ -91,8 +92,6 @@ func (c *RedditScraper) getPostsHelper(url string) ([]*Post, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	c.wait()
 
 	request, err := http.NewRequest(
 		"GET",
@@ -110,11 +109,6 @@ func (c *RedditScraper) getPostsHelper(url string) ([]*Post, error) {
 
 	if err != nil {
 		return nil, err
-	}
-
-	if response.StatusCode == 429 {
-		c.ri.sleep()
-		return c.getPostsHelper(url)
 	}
 
 	if response.StatusCode != 200 {

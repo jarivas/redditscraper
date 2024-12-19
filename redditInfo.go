@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -117,20 +116,10 @@ func (ri RedditInfo) requestToken() (*http.Response, error) {
 		return nil, err
 	}
 
-	if r.StatusCode == 429 {
-		ri.sleep()
-		return ri.requestToken()
-	}
-
 	if r.StatusCode != 200 {
-		log.Println(r.Body)
-
+		logResponse(r.Body)
 		return nil, errors.New(r.Status)
 	}
 
 	return r, nil
-}
-
-func (ri RedditInfo) sleep() {
-	time.Sleep(ri.timeSleep)
 }

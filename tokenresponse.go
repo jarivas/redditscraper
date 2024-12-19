@@ -7,16 +7,16 @@ import (
 )
 
 type tokenResponse struct {
-	AccessToken string `json:"access_token"`
-	ExpiresIn   int    `json:"expires_in"`
+	Token   string `json:"access_token"`
+	Expires int    `json:"expires_in"`
 }
 
 func (t tokenResponse) convert() (*oauthToken, error) {
-	if t.AccessToken == "" || t.ExpiresIn == 0 {
+	if t.Token == "" || t.Expires == 0 {
 		return nil, errors.New("empty token")
 	}
 
-	format := fmt.Sprintf("%vs", t.ExpiresIn)
+	format := fmt.Sprintf("%vs", t.Expires)
 	duration, err := time.ParseDuration(format)
 
 	if err != nil {
@@ -25,8 +25,8 @@ func (t tokenResponse) convert() (*oauthToken, error) {
 	expiresAt := time.Now().Add(duration)
 
 	result := oauthToken{
-		accessToken: t.AccessToken,
-		expiresAt:   expiresAt,
+		at:      t.Token,
+		expires: expiresAt,
 	}
 
 	return &result, nil

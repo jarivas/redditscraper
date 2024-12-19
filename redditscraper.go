@@ -52,7 +52,7 @@ func (c RedditScraper) FromEnv(subreddit string) (*RedditScraper, error) {
 
 func (c *RedditScraper) Listen(sort string, listing PostListing, p chan<- *Post, e chan<- error) {
 	if slices.Contains(validSorts, sort) {
-		c.getPosts(sort,listing, p, e)
+		c.getPosts(sort, listing, p, e)
 	}
 
 	e <- errors.New("invalid subreddit sort for listening")
@@ -104,7 +104,7 @@ func (c *RedditScraper) getPostsHelper(url string) ([]*Post, error) {
 		return nil, err
 	}
 
-	request.Header.Set("Authentication", "Bearer "+currentToken.accessToken)
+	request.Header.Set("Authentication", "Bearer "+currentToken.at)
 
 	response, err := http.DefaultClient.Do(request)
 
@@ -126,7 +126,7 @@ func (c *RedditScraper) getPostsHelper(url string) ([]*Post, error) {
 }
 
 func (c *RedditScraper) refreshToken(ri *RedditInfo) error {
-	if currentToken != nil && currentToken.expiresAt.After(time.Now()) {
+	if currentToken != nil && currentToken.expires.After(time.Now()) {
 		return nil
 	}
 
@@ -168,7 +168,7 @@ func (c *RedditScraper) convertResponseToPosts(response *http.Response) ([]*Post
 	}
 
 	for _, item := range body.Data.Children {
-		if (item.Data.Id != "") {
+		if item.Data.Id != "" {
 			posts = append(posts, item.Data)
 		}
 	}

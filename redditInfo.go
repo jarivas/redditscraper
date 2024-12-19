@@ -84,7 +84,7 @@ func (ri RedditInfo) getToken() (*oauthToken, error) {
 		return nil, err
 	}
 
-	if ot.accessToken == "" || ot.expiresAt.Before(time.Now()) {
+	if ot.at == "" || ot.expires.Before(time.Now()) {
 		logResponse(r.Body)
 		return nil, errors.New("invalid oauth token")
 	}

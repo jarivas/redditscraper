@@ -6,7 +6,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	_, err := RedditScraper{}.FromEnv("redditdev")
+	_, err := RedditScraper{}.FromEnv(subredditTest)
 
 	if err != nil {
 		t.Error(err)
@@ -14,7 +14,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestListen(t *testing.T) {
-	rs, err := RedditScraper{}.FromEnv("redditdev")
+	rs, err := RedditScraper{}.FromEnv(subredditTest)
 
 	if err != nil {
 		t.Error(err)
@@ -36,6 +36,7 @@ func TestListen(t *testing.T) {
 			return
 		case err = <-e:
 			t.Error(err)
+			return
 		}
 	}
 }

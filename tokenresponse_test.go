@@ -7,8 +7,8 @@ import (
 
 func TestConvert(t *testing.T) {
 	tokenResponse := tokenResponse{
-		AccessToken: "asd",
-		ExpiresIn: 10,
+		Token:   "asd",
+		Expires: 10,
 	}
 
 	token, err := tokenResponse.convert()
@@ -17,13 +17,13 @@ func TestConvert(t *testing.T) {
 		t.Error(err)
 	}
 
-	if token.accessToken != tokenResponse.AccessToken {
-		t.Errorf("Invalid access token %v", token.accessToken)
+	if token.at != tokenResponse.Token {
+		t.Errorf("Invalid access token %v", token.at)
 	}
 
 	now := time.Now()
 
-	if token.expiresAt.Before(now) {
-		t.Errorf("Invalid expires a %v", token.expiresAt)
+	if token.expires.Before(now) {
+		t.Errorf("Invalid expires a %v", token.expires)
 	}
 }

@@ -112,7 +112,7 @@ func (c *RedditScraper) getPostsHelper(url string) ([]*Post, error) {
 	}
 
 	if response.StatusCode != 200 {
-		logResponse(response.Body)
+		logResponse(response)
 		return nil, errors.New(response.Status)
 	}
 
@@ -152,12 +152,12 @@ func (c *RedditScraper) convertResponseToPosts(response *http.Response) ([]*Post
 	err := json.NewDecoder(response.Body).Decode(&body)
 
 	if err != nil {
-		logResponse(response.Body)
+		logResponse(response)
 		return nil, err
 	}
 
 	if len(body.Data.Children) == 0 {
-		logResponse(response.Body)
+		logResponse(response)
 		return nil, errors.New("impossible to convert to posts")
 	}
 

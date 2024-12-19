@@ -3,9 +3,16 @@ package redditscraper
 import (
 	"io"
 	"log"
+	"net/http"
 )
 
-func logResponse(body io.ReadCloser) {
+func logResponse(response *http.Response) {
+	log.Println(response.Request.URL.Path)
+	log.Println(response.Status)
+	logBody(response.Body)
+}
+
+func logBody(body io.ReadCloser) {
 	bytes, err := io.ReadAll(body)
 
 	if err != nil {

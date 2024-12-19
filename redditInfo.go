@@ -79,12 +79,12 @@ func (ri RedditInfo) getToken() (*oauthToken, error) {
 	ot, err := t.convert()
 
 	if err != nil {
-		logResponse(r.Body)
+		logResponse(r)
 		return nil, err
 	}
 
 	if ot.at == "" || ot.expires.Before(time.Now()) {
-		logResponse(r.Body)
+		logResponse(r)
 		return nil, errors.New("invalid oauth token")
 	}
 
@@ -117,7 +117,7 @@ func (ri RedditInfo) requestToken() (*http.Response, error) {
 	}
 
 	if r.StatusCode != 200 {
-		logResponse(r.Body)
+		logResponse(r)
 		return nil, errors.New(r.Status)
 	}
 

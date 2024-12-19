@@ -3,7 +3,6 @@ package redditscraper
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"slices"
 	"time"
@@ -119,7 +118,7 @@ func (c *RedditScraper) getPostsHelper(url string) ([]*Post, error) {
 	}
 
 	if response.StatusCode != 200 {
-		log.Println(response.Body)
+		logResponse(response.Body)
 		return nil, errors.New(response.Status)
 	}
 
@@ -159,12 +158,12 @@ func (c *RedditScraper) convertResponseToPosts(response *http.Response) ([]*Post
 	err := json.NewDecoder(response.Body).Decode(&body)
 
 	if err != nil {
-		log.Println(response.Body)
+		logResponse(response.Body)
 		return nil, err
 	}
 
 	if len(body.Data.Children) == 0 {
-		log.Println(response.Body)
+		logResponse(response.Body)
 		return nil, errors.New("impossible to convert to posts")
 	}
 

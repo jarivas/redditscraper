@@ -80,12 +80,12 @@ func (ri RedditInfo) getToken() (*oauthToken, error) {
 	ot, err := t.convert()
 
 	if err != nil {
-		log.Println(t)
+		logResponse(r.Body)
 		return nil, err
 	}
 
 	if ot.accessToken == "" || ot.expiresAt.Before(time.Now()) {
-		log.Println(t)
+		logResponse(r.Body)
 		return nil, errors.New("invalid oauth token")
 	}
 

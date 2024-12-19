@@ -3,13 +3,13 @@ package redditscraper
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"slices"
 	"time"
 )
 
 var waitTime time.Duration = 1000000000
-var nextRequestWait time.Duration = 5000000000
 var nextRequest time.Time = time.Now()
 
 type RedditScraper struct {
@@ -51,18 +51,15 @@ func (c RedditScraper) FromEnv(subreddit string) (*RedditScraper, error) {
 	return c.New(subreddit, ri)
 }
 
-func (c *RedditScraper) Listen(sort string, p chan<- *Post, e chan<- error) {
+func (c *RedditScraper) Listen(sort string, listing PostListing, p chan<- *Post, e chan<- error) {
 	if slices.Contains(validSorts, sort) {
-		c.getPosts(sort, p, e)
+		c.getPosts(sort,listing, p, e)
 	}
 
 	e <- errors.New("invalid subreddit sort for listening")
 }
 
-func (c *RedditScraper) getPosts(sort string, p chan<- *Post, e chan<- error) {
-	listing := PostListing{
-		Limit: maxPosts,
-	}
+func (c *RedditScraper) getPosts(sort string, listing PostListing, p chan<- *Post, e chan<- error) {
 	lastUrl := ""
 
 	for {
@@ -122,6 +119,7 @@ func (c *RedditScraper) getPostsHelper(url string) ([]*Post, error) {
 	}
 
 	if response.StatusCode != 200 {
+		log.Println(response.Body)
 		return nil, errors.New(response.Status)
 	}
 
@@ -132,8 +130,6 @@ func (c *RedditScraper) refreshToken(ri *RedditInfo) error {
 	if currentToken != nil && currentToken.expiresAt.After(time.Now()) {
 		return nil
 	}
-
-	c.wait()
 
 	t, err := ri.getToken()
 
@@ -151,7 +147,7 @@ func (c *RedditScraper) wait() {
 		time.Sleep(waitTime)
 	}
 
-	nextRequest = time.Now().Add(nextRequestWait)
+	nextRequest = time.Now().Add(c.ri.timeSleep)
 }
 
 func (c *RedditScraper) convertResponseToPosts(response *http.Response) ([]*Post, error) {
@@ -163,11 +159,19 @@ func (c *RedditScraper) convertResponseToPosts(response *http.Response) ([]*Post
 	err := json.NewDecoder(response.Body).Decode(&body)
 
 	if err != nil {
+		log.Println(response.Body)
 		return nil, err
 	}
 
+	if len(body.Data.Children) == 0 {
+		log.Println(response.Body)
+		return nil, errors.New("impossible to convert to posts")
+	}
+
 	for _, item := range body.Data.Children {
-		posts = append(posts, item.Data)
+		if (item.Data.Id != "") {
+			posts = append(posts, item.Data)
+		}
 	}
 
 	return posts, nil

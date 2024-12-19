@@ -24,7 +24,7 @@ import (
 )
 
 func main() {
-   rs, err := RedditScraper{}.FromEnv("redditdev")
+   rs, err := redditscraper.RedditScraper{}.FromEnv("redditdev")
 
 	if err != nil {
 		log.Fatal(err)
@@ -33,7 +33,12 @@ func main() {
 	p := make(chan *Post)
 	e := make(chan error)
 
-	go rs.Listen(SubredditBest, p, e)
+	listing := redditscraper.PostListing{
+		Limit: redditscraper.MaxPosts,
+		Id: "1h3wrtm"
+	}
+
+	go rs.Listen(SubredditBest, listing, p, e)
 
 	for {
 		select{

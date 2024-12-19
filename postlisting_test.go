@@ -10,7 +10,7 @@ func TestLimitParam(t *testing.T) {
 
 	param := l.limitParam()
 
-	if param != fmt.Sprintf("limit=%v", maxPosts) {
+	if param != fmt.Sprintf("limit=%v", MaxPosts) {
 		t.Errorf("Invalid limit: %v", l.Limit)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -15,9 +16,10 @@ type RedditInfo struct {
 	password  string
 	clientId  string
 	appSecret string
+	timeSleep time.Duration
 }
 
-func (ri RedditInfo) New(username, password, clientId, appSecret string) (*RedditInfo, error) {
+func (ri RedditInfo) New(username, password, clientId, appSecret, timeSleep string) (*RedditInfo, error) {
 	if username == "" {
 		return nil, errors.New("redditinfo: invalid username")
 	}
@@ -34,11 +36,22 @@ func (ri RedditInfo) New(username, password, clientId, appSecret string) (*Reddi
 		return nil, errors.New("redditinfo: invalid appSecret")
 	}
 
+	if timeSleep == "" {
+		return nil, errors.New("redditinfo: invalid timeSleep")
+	}
+
+	d, err := time.ParseDuration(timeSleep)
+
+	if err != nil {
+		return nil, errors.New("redditinfo: invalid timeSleep format")
+	}
+
 	return &RedditInfo{
 		username:  username,
 		password:  password,
 		clientId:  clientId,
 		appSecret: appSecret,
+		timeSleep: d,
 	}, nil
 }
 
@@ -48,34 +61,38 @@ func (ri RedditInfo) FromEnv() (*RedditInfo, error) {
 		os.Getenv("REDDIT_PASSWORD"),
 		os.Getenv("REDDIT_CLIENT_ID"),
 		os.Getenv("REDDIT_APP_SECRET"),
+		os.Getenv("REDDIT_TIME_SLEEP"),
 	)
 }
 
 func (ri RedditInfo) getToken() (*oauthToken, error) {
-	response, err := ri.getTokenResponse()
+	r, err := ri.requestToken()
 
 	if err != nil {
 		return nil, err
 	}
 
-	if response.StatusCode == 429 {
-		ri.sleep()
-		return ri.getToken()
+	defer r.Body.Close()
+
+	t := tokenResponse{}
+	json.NewDecoder(r.Body).Decode(&t)
+
+	ot, err := t.convert()
+
+	if err != nil {
+		log.Println(t)
+		return nil, err
 	}
 
-	if response.StatusCode != 200 {
-		return nil, errors.New(response.Status)
+	if ot.accessToken == "" || ot.expiresAt.Before(time.Now()) {
+		log.Println(t)
+		return nil, errors.New("invalid oauth token")
 	}
 
-	defer response.Body.Close()
-
-	token := tokenResponse{}
-	json.NewDecoder(response.Body).Decode(&token)
-
-	return token.convert()
+	return ot, nil
 }
 
-func (ri RedditInfo) getTokenResponse() (*http.Response, error) {
+func (ri RedditInfo) requestToken() (*http.Response, error) {
 	body := fmt.Sprintf(
 		"grant_type=password&username=%v&password=%v",
 		ri.username,
@@ -94,11 +111,26 @@ func (ri RedditInfo) getTokenResponse() (*http.Response, error) {
 
 	request.SetBasicAuth(ri.clientId, ri.appSecret)
 
-	return http.DefaultClient.Do(request)
+	r, err := http.DefaultClient.Do(request)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if r.StatusCode == 429 {
+		ri.sleep()
+		return ri.requestToken()
+	}
+
+	if r.StatusCode != 200 {
+		log.Println(r.Body)
+
+		return nil, errors.New(r.Status)
+	}
+
+	return r, nil
 }
 
 func (ri RedditInfo) sleep() {
-	d, _ := time.ParseDuration("30")
-
-	time.Sleep(d)
+	time.Sleep(ri.timeSleep)
 }

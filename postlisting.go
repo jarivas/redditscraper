@@ -10,8 +10,8 @@ var validPeriods = []string{"hour", "day", "week", "month", "year", "all"}
 
 type PostListing struct {
 	Id              string `example:"1h3wrtm"`
-	Limit           int    `default:"25"`
-	Count           int
+	Limit           int    `example:"25"`
+	Count           int    `example:"25"`
 	Latest          bool
 	Period          string `example:"one of (hour, day, week, month, year, all)"`
 	Show            bool
@@ -45,8 +45,8 @@ func (l PostListing) String() string {
 }
 
 func (l PostListing) limitParam() string {
-	if l.Limit == 0 || l.Limit > maxPosts {
-		l.Limit = maxPosts
+	if l.Limit == 0 || l.Limit > MaxPosts {
+		l.Limit = MaxPosts
 	}
 
 	return "limit=" + strconv.Itoa(l.Limit)
@@ -57,11 +57,11 @@ func (l PostListing) countParam() string {
 }
 
 func (l PostListing) periodParam() string {
-	if ! slices.Contains(validPeriods, l.Period) {
+	if !slices.Contains(validPeriods, l.Period) {
 		l.Period = "all"
 	}
 
-	return "t="+l.Period
+	return "t=" + l.Period
 }
 
 func (l PostListing) idParam() string {

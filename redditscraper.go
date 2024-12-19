@@ -59,6 +59,7 @@ func (c *RedditScraper) Listen(sort string, listing PostListing, p chan<- *Post,
 }
 
 func (c *RedditScraper) getPosts(sort string, listing PostListing, p chan<- *Post, e chan<- error) {
+	l := 0
 	lastUrl := ""
 
 	for {
@@ -70,14 +71,13 @@ func (c *RedditScraper) getPosts(sort string, listing PostListing, p chan<- *Pos
 		}
 
 		posts, err := c.getPostsHelper(url)
-		l := len(posts)
 
 		if err != nil {
 			e <- err
 		}
 
-		if l == 0 {
-			e <- errors.New("empty post on:" + url)
+		if l = len(posts); l == 0 {
+			e <- errors.New("empty posts respomse on:" + url)
 		} else {
 			c.channelPosts(posts, p)
 			listing.Id = posts[l-1].Id
